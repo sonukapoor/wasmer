@@ -934,7 +934,7 @@ impl Instance {
             Err(_err) => {
                 // ret is None if there is more than 2^32 waiter in queue or some other error
                 // TODO: why THIS specific trap code tho? -.-
-                Err(Trap::lib(TrapCode::TableAccessOutOfBounds))
+                Err(Trap::lib(TrapCode::HostInterrupt))
             }
         }
     }
