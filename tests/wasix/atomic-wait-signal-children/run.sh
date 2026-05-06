@@ -10,3 +10,7 @@ grep -q "^forwarding parent waiting$" forwarded-output
 grep -q "^forwarded child 1 waiting$" forwarded-output
 grep -q "^forwarded child 2 waiting$" forwarded-output
 grep -q "^forwarding parent survived$" forwarded-output
+
+timeout 5s $WASMER_RUN --enable-threads main.wasm -- vfork > vfork-output
+grep -q "^vfork child waiting$" vfork-output
+grep -q "^vfork parent survived$" vfork-output
