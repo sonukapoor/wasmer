@@ -935,12 +935,13 @@ fn wake_atomic_waiters(process: &WasiProcessInner, signal: Signal) {
             | Signal::Sigint
             | Signal::Sigstop
             | Signal::Sigpipe
+            | Signal::Sigwakeup
     ) {
         return;
     }
 
-    // On kill, disable atomics to prevent threads from resuming.
     if signal == Signal::Sigkill {
+        // On kill, disable atomics to prevent threads from resuming.
         // NOTE: disable_atomics also wakes all current waiters.
         if let Err(err) = memory.disable_atomics() {
             tracing::trace!(
@@ -950,6 +951,7 @@ fn wake_atomic_waiters(process: &WasiProcessInner, signal: Signal) {
             );
         }
     } else {
+        // On other signals, just wake up the waiters.
         memory.wake_all_atomic_waiters();
     }
 }

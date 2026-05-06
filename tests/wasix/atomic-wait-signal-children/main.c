@@ -1,19 +1,18 @@
 #include <errno.h>
 #include <signal.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-static _Atomic uint32_t wait_word = 0;
+static int wait_word = 0;
 
 static void wait_forever(const char *name) {
   printf("%s waiting\n", name);
   fflush(stdout);
 
-  __builtin_wasm_memory_atomic_wait32((int *)&wait_word, 0, -1LL);
+  __builtin_wasm_memory_atomic_wait32(&wait_word, 0, -1LL);
 
   printf("%s woken\n", name);
   fflush(stdout);

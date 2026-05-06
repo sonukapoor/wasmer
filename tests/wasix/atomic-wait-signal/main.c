@@ -1,10 +1,9 @@
 #include <signal.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-static _Atomic uint32_t wait_word = 0;
+static int wait_word = 0;
 
 int main(void) {
   pid_t parent = getpid();
@@ -27,7 +26,7 @@ int main(void) {
   puts("waiting");
   fflush(stdout);
 
-  __builtin_wasm_memory_atomic_wait32((int *)&wait_word, 0, -1LL);
+  __builtin_wasm_memory_atomic_wait32(&wait_word, 0, -1LL);
 
   puts("woken");
   fflush(stdout);
