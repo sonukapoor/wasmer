@@ -15,6 +15,15 @@ fn assert_success(result: &super::WasmRunResult) {
     );
 }
 
+fn assert_stdout_contains(result: &super::WasmRunResult, expected: &str) {
+    let stdout = String::from_utf8_lossy(&result.stdout);
+    assert!(
+        stdout.lines().any(|line| line == expected),
+        "missing stdout line {expected:?}\n{}",
+        super::format_captured_output(result)
+    );
+}
+
 fn run_with_arg(wasm: &PathBuf, arg: &str) {
     let result = run_wasm_with_runner_config(wasm, wasm.parent().unwrap(), |runner| {
         runner.with_args([arg]);
@@ -46,6 +55,71 @@ fn assert_stdout_zero(
         run_wasm_with_runner_config(wasm, wasm.parent().unwrap(), configure_runner).unwrap();
     assert_success(&result);
     assert_eq!(String::from_utf8_lossy(&result.stdout).trim(), "0");
+}
+
+#[test]
+fn test_atomic_wait_signal_wakes_main_thread() {
+    let wasm = run_build_script(file!(), "atomic-wait-signal").unwrap();
+    let result = run_wasm_with_runner_config(&wasm, wasm.parent().unwrap(), |_| {}).unwrap();
+
+    assert!(
+        result.exit_code != Some(0),
+        "expected signal termination\n{}",
+        super::format_captured_output(&result)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&result.stdout).trim(),
+        "waiting",
+        "{}",
+        super::format_captured_output(&result)
+    );
+}
+
+fn run_atomic_wait_signal_children_variant(wasm: &PathBuf, arg: &str, expected_stdout: &[&str]) {
+    let result = run_wasm_with_runner_config(wasm, wasm.parent().unwrap(), |runner| {
+        runner.with_args([arg]);
+    })
+    .unwrap();
+
+    assert_success(&result);
+    for expected in expected_stdout {
+        assert_stdout_contains(&result, expected);
+    }
+}
+
+#[test]
+fn test_atomic_wait_signal_targeted_child() {
+    let wasm = run_build_script(file!(), "atomic-wait-signal-children").unwrap();
+    run_atomic_wait_signal_children_variant(
+        &wasm,
+        "targeted",
+        &["targeted child waiting", "targeted parent survived"],
+    );
+}
+
+#[test]
+fn test_atomic_wait_signal_forwarded_to_children() {
+    let wasm = run_build_script(file!(), "atomic-wait-signal-children").unwrap();
+    run_atomic_wait_signal_children_variant(
+        &wasm,
+        "forwarded",
+        &[
+            "forwarding parent waiting",
+            "forwarded child 1 waiting",
+            "forwarded child 2 waiting",
+            "forwarding parent survived",
+        ],
+    );
+}
+
+#[test]
+fn test_atomic_wait_signal_vfork_child() {
+    let wasm = run_build_script(file!(), "atomic-wait-signal-children").unwrap();
+    run_atomic_wait_signal_children_variant(
+        &wasm,
+        "vfork",
+        &["vfork child waiting", "vfork parent survived"],
+    );
 }
 
 #[test]
