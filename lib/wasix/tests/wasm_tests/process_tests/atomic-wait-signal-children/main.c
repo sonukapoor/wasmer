@@ -9,7 +9,7 @@
 
 static int wait_word = 0;
 
-static int expect_atomic_wait_timeout(const char *name) {
+static int expect_atomic_wait_timeout(const char* name) {
   int result = __builtin_wasm_memory_atomic_wait32(&wait_word, 0, 1000000LL);
   if (result != 2) {
     printf("%s expected atomic wait timeout, got %d\n", name, result);
@@ -18,7 +18,7 @@ static int expect_atomic_wait_timeout(const char *name) {
   return EXIT_SUCCESS;
 }
 
-static void wait_forever(const char *name) {
+static void wait_forever(const char* name) {
   printf("%s waiting\n", name);
   fflush(stdout);
 
@@ -78,8 +78,8 @@ static int targeted_child(void) {
   return EXIT_SUCCESS;
 }
 
-static void *kill_current_process(void *arg) {
-  pid_t pid = *(pid_t *)arg;
+static void* kill_current_process(void* arg) {
+  pid_t pid = *(pid_t*)arg;
   usleep(100 * 1000);
   if (kill(pid, SIGKILL) != 0) {
     perror("kill");
@@ -97,7 +97,8 @@ static int vfork_child(void) {
   if (child == 0) {
     pid_t child_pid = getpid();
     pthread_t signaler;
-    if (pthread_create(&signaler, NULL, kill_current_process, &child_pid) != 0) {
+    if (pthread_create(&signaler, NULL, kill_current_process, &child_pid) !=
+        0) {
       perror("pthread_create");
       _Exit(EXIT_FAILURE);
     }
@@ -159,7 +160,7 @@ static int forwarded_to_children(void) {
   return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   if (argc != 2) {
     return EXIT_FAILURE;
   }
